@@ -1,21 +1,34 @@
 # Checkers
 
-A polished two-player checkers game built with Next.js, React, TypeScript, and Tailwind CSS.
+A modern, responsive checkers game built with Next.js, React, TypeScript, and Tailwind CSS.
 
-It includes full turn-based gameplay, forced captures, chain jumps, king promotion, move history, undo support, local progress saving, and responsive UI tuned for desktop and mobile play.
+It recreates the classic two-player board game with smooth interactions, forced captures, king promotion, move history, local save support, and a clean interface that works well on both desktop and mobile.
 
-## Features
+## Live Project
 
-- Full 8x8 checkers board with classic starting layout
+- Live Demo: [checkers-eight-nu.vercel.app](https://checkers-eight-nu.vercel.app/)
+- Repository: [github.com/eenock/Checkers](https://github.com/eenock/Checkers)
+
+## Screenshots
+
+![Board overview](./public/screenshots/board-overview.png)
+
+![Forced capture state](./public/screenshots/forced-capture.png)
+
+![Move history panel](./public/screenshots/move-history.png)
+
+## Highlights
+
+- Classic 8x8 checkers board with the standard opening setup
 - Forced-capture rule enforcement
 - Multi-jump capture chains
-- King promotion when a piece reaches the far side
+- King promotion at the far rank
 - Win detection when a player has no pieces or no legal moves
 - Draw detection after 50 non-capturing moves
 - Undo for the last completed turn
 - Surrender, reset, and animation toggle controls
-- Move history with capture and promotion markers
-- First-time tutorial overlay
+- Move history with capture and promotion indicators
+- First-visit tutorial overlay
 - Local storage persistence for in-progress games
 - Responsive layout with keyboard-friendly interactions
 
@@ -32,7 +45,7 @@ It includes full turn-based gameplay, forced captures, chain jumps, king promoti
 
 ### Prerequisites
 
-- Node.js 20+ recommended
+- Node.js 20 or newer
 - npm
 
 ### Install
@@ -47,9 +60,9 @@ npm install
 npm run dev
 ```
 
-Open `http://localhost:3000`.
+Visit `http://localhost:3000`.
 
-## Available Scripts
+## Scripts
 
 ```bash
 npm run dev
@@ -58,14 +71,26 @@ npm run start
 npm run lint
 ```
 
-## Gameplay Notes
+## Gameplay Rules
 
 - Light moves first.
-- Regular pieces move diagonally forward.
+- Regular pieces move diagonally forward by one square.
 - Captures are mandatory when available.
-- If a jump leads to another available jump, the same piece must continue.
-- Reaching the opposite end promotes a piece to a king.
+- If a jump creates another jump, the same piece must continue capturing.
+- Reaching the opposite end of the board promotes a piece to a king.
 - Kings can move diagonally in both directions.
+
+## Deployment
+
+This project is ready to deploy on Vercel.
+
+1. Push the repository to GitHub.
+2. Import `eenock/Checkers` into Vercel.
+3. Keep the default Next.js framework settings.
+4. Add any production environment variables from `.env` if needed.
+5. Deploy.
+
+Current production URL: [checkers-eight-nu.vercel.app](https://checkers-eight-nu.vercel.app/)
 
 ## Project Structure
 
@@ -88,6 +113,8 @@ lib/
     game-logic.ts
     game-reducer.ts
     types.ts
+public/
+  screenshots/
 ```
 
 ## Quality Checks
@@ -98,10 +125,18 @@ The project currently passes:
 - `npm run build`
 - `npx tsc --noEmit`
 
-## Possible Next Steps
+## Roadmap
 
-- Add single-player AI
-- Add sound effects
+- Add a single-player AI opponent
+- Add sound effects and optional music
 - Add difficulty levels
 - Add online multiplayer
-- Add tests for move generation and reducer behavior
+- Add focused tests for move generation and reducer behavior
+
+## Contributing
+
+Issues, ideas, and pull requests are welcome. For larger changes, opening an issue first is a good way to discuss the direction before implementation.
+
+## License
+
+This project is licensed under the MIT License. See [LICENSE](./LICENSE) for details.
