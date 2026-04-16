@@ -1,6 +1,6 @@
 'use client'
 
-import { memo, useState } from 'react'
+import { memo, useState, useSyncExternalStore } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { X, ChevronRight, ChevronLeft, Crown, Zap, Target } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -11,6 +11,7 @@ interface TutorialProps {
 }
 
 const TUTORIAL_KEY = 'checkers_tutorial_seen'
+const emptySubscribe = () => () => {}
 
 const tutorialSteps = [
   {
@@ -39,18 +40,18 @@ const tutorialSteps = [
 ]
 
 function TutorialComponent({ animationsEnabled }: TutorialProps) {
-  const [isOpen, setIsOpen] = useState(() => {
-    if (typeof window === 'undefined') {
-      return false
-    }
-
-    return !localStorage.getItem(TUTORIAL_KEY)
-  })
+  const [dismissed, setDismissed] = useState(false)
   const [step, setStep] = useState(0)
+  const shouldShowTutorial = useSyncExternalStore(
+    emptySubscribe,
+    () => !localStorage.getItem(TUTORIAL_KEY),
+    () => false
+  )
+  const isOpen = shouldShowTutorial && !dismissed
 
   const handleClose = () => {
     localStorage.setItem(TUTORIAL_KEY, 'true')
-    setIsOpen(false)
+    setDismissed(true)
   }
 
   const handleNext = () => {

@@ -1,6 +1,6 @@
 'use client'
 
-import { useReducer, useCallback, useEffect } from 'react'
+import { useReducer, useCallback, useEffect, useSyncExternalStore } from 'react'
 import { motion } from 'framer-motion'
 import { Board } from './board'
 import { GameControls } from './game-controls'
@@ -8,64 +8,128 @@ import { MoveHistory } from './move-history'
 import { WinCelebration } from './win-celebration'
 import { Tutorial } from './tutorial'
 import { gameReducer, createInitialState } from '@/lib/checkers/game-reducer'
-import type { Move, Position } from '@/lib/checkers/types'
+import type { GameState, Move, Position } from '@/lib/checkers/types'
 import { cn } from '@/lib/utils'
 
 const STORAGE_KEY = 'checkers_game_state'
+const emptySubscribe = () => () => {}
+
+type PersistedGameState = Pick<
+  GameState,
+  | 'board'
+  | 'currentPlayer'
+  | 'mustJump'
+  | 'jumpingPiece'
+  | 'moveHistory'
+  | 'movesWithoutCapture'
+  | 'status'
+  | 'animationsEnabled'
+>
+
+function parseSavedGame(raw: string | null): PersistedGameState | null {
+  if (!raw) {
+    return null
+  }
+
+  try {
+    const parsed = JSON.parse(raw)
+
+    if (parsed.board && parsed.currentPlayer) {
+      return {
+        board: parsed.board,
+        currentPlayer: parsed.currentPlayer,
+        mustJump: parsed.mustJump,
+        jumpingPiece: parsed.jumpingPiece,
+        moveHistory: parsed.moveHistory ?? [],
+        movesWithoutCapture: parsed.movesWithoutCapture ?? 0,
+        status: parsed.status ?? 'playing',
+        animationsEnabled: parsed.animationsEnabled ?? true,
+      }
+    }
+  } catch (error) {
+    console.error('[checkers] Failed to load saved game:', error)
+  }
+
+  return null
+}
+
+function createStateFromSavedGame(savedState: PersistedGameState | null): GameState {
+  if (!savedState) {
+    return createInitialState()
+  }
+
+  return {
+    ...createInitialState(),
+    ...savedState,
+    previousState: null,
+    canUndo: false,
+  }
+}
 
 export function CheckersGame() {
-  const [state, dispatch] = useReducer(gameReducer, null, () => {
-    // Try to load saved state
-    if (typeof window !== 'undefined') {
-      try {
-        const saved = localStorage.getItem(STORAGE_KEY)
-        if (saved) {
-          const parsed = JSON.parse(saved)
-          // Validate the saved state has required properties
-          if (parsed.board && parsed.currentPlayer) {
-            return {
-              ...createInitialState(),
-              ...parsed,
-              // Reset these to prevent issues
-              previousState: null,
-              canUndo: false,
-            }
-          }
-        }
-      } catch (e) {
-        console.error('[v0] Failed to load saved game:', e)
-      }
-    }
-    return createInitialState()
-  })
+  const storageReady = useSyncExternalStore(
+    emptySubscribe,
+    () => true,
+    () => false
+  )
+  const initialSavedGame = storageReady
+    ? parseSavedGame(localStorage.getItem(STORAGE_KEY))
+    : null
 
-  // Save state to localStorage
-  useEffect(() => {
-    if (typeof window !== 'undefined' && state.status === 'playing') {
-      try {
-        const toSave = {
-          board: state.board,
-          currentPlayer: state.currentPlayer,
-          mustJump: state.mustJump,
-          jumpingPiece: state.jumpingPiece,
-          moveHistory: state.moveHistory,
-          movesWithoutCapture: state.movesWithoutCapture,
-          status: state.status,
-          animationsEnabled: state.animationsEnabled,
-        }
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(toSave))
-      } catch (e) {
-        console.error('[v0] Failed to save game:', e)
-      }
-    }
-  }, [state])
+  return (
+    <CheckersGameContent
+      key={storageReady ? (initialSavedGame ? 'saved-game' : 'new-game') : 'loading'}
+      initialSavedGame={initialSavedGame}
+      storageReady={storageReady}
+    />
+  )
+}
 
-  // Clear saved state on game end
+interface CheckersGameContentProps {
+  initialSavedGame: PersistedGameState | null
+  storageReady: boolean
+}
+
+function CheckersGameContent({
+  initialSavedGame,
+  storageReady,
+}: CheckersGameContentProps) {
+  const [state, dispatch] = useReducer(
+    gameReducer,
+    initialSavedGame,
+    createStateFromSavedGame
+  )
+
+  // Save state to localStorage after hydration has completed.
   useEffect(() => {
-    if (state.status !== 'playing' && typeof window !== 'undefined') {
-      localStorage.removeItem(STORAGE_KEY)
+    if (!storageReady || state.status !== 'playing') {
+      return
     }
-  }, [state.status])
+
+    try {
+      const toSave = {
+        board: state.board,
+        currentPlayer: state.currentPlayer,
+        mustJump: state.mustJump,
+        jumpingPiece: state.jumpingPiece,
+        moveHistory: state.moveHistory,
+        movesWithoutCapture: state.movesWithoutCapture,
+        status: state.status,
+        animationsEnabled: state.animationsEnabled,
+      }
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(toSave))
+    } catch (e) {
+      console.error('[checkers] Failed to save game:', e)
+    }
+  }, [state, storageReady])
+
+  useEffect(() => {
+    if (!storageReady || state.status === 'playing') {
+      return
+    }
+
+    localStorage.removeItem(STORAGE_KEY)
+  }, [state.status, storageReady])
 
   const handleSelectPiece = useCallback((position: Position) => {
     dispatch({ type: 'SELECT_PIECE', position })
@@ -91,7 +155,6 @@ export function CheckersGame() {
     dispatch({ type: 'TOGGLE_ANIMATIONS' })
   }, [])
 
-  // Keyboard navigation
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {

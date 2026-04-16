@@ -5,7 +5,6 @@ import './globals.css'
 export const metadata: Metadata = {
   title: 'Checkers - Classic Board Game',
   description: 'Play the classic Checkers board game with smooth animations, mobile-first design, and full rule enforcement.',
-  generator: 'v0.app',
   icons: {
     icon: [
       {
