@@ -1,8 +1,8 @@
 'use client'
 
-import { memo, useMemo } from 'react'
+import { memo, useEffect, useId, useMemo } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Trophy, RotateCcw } from 'lucide-react'
+import { Crown, RotateCcw, Trophy, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import type { GameStatus } from '@/lib/checkers/types'
 import { cn } from '@/lib/utils'
@@ -26,6 +26,8 @@ function WinCelebrationComponent({ status, animationsEnabled, onReset }: WinCele
   const isWin = status === 'player1_wins' || status === 'player2_wins'
   const isDraw = status === 'draw'
   const showCelebration = isWin || isDraw
+  const titleId = useId()
+  const descriptionId = useId()
 
   const confetti = useMemo<Confetti[]>(() => {
     if (!isWin || !animationsEnabled) {
@@ -49,7 +51,22 @@ function WinCelebrationComponent({ status, animationsEnabled, onReset }: WinCele
     })
   }, [animationsEnabled, isWin, status])
 
-  const getWinnerText = () => {
+  useEffect(() => {
+    if (!showCelebration) {
+      return
+    }
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        onReset()
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [onReset, showCelebration])
+
+  const getStatusText = () => {
     switch (status) {
       case 'player1_wins':
         return 'Light Wins!'
@@ -62,6 +79,17 @@ function WinCelebrationComponent({ status, animationsEnabled, onReset }: WinCele
     }
   }
 
+  const getSupportingText = () => {
+    if (isDraw) {
+      return 'The game ended in a draw after 50 moves without a capture.'
+    }
+
+    return 'A clean finish. Start a new round and run it back.'
+  }
+
+  const accentClass = isDraw ? 'from-slate-500/20 to-slate-500/5' : 'from-amber-500/20 to-amber-500/5'
+  const badgeLabel = isDraw ? 'Match Complete' : 'Victory'
+
   return (
     <AnimatePresence>
       {showCelebration && (
@@ -69,7 +97,7 @@ function WinCelebrationComponent({ status, animationsEnabled, onReset }: WinCele
           initial={animationsEnabled ? { opacity: 0 } : { opacity: 1 }}
           animate={{ opacity: 1 }}
           exit={animationsEnabled ? { opacity: 0 } : {}}
-          className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 p-4 backdrop-blur-sm"
           onClick={(e) => e.target === e.currentTarget && onReset()}
         >
           {/* Confetti */}
@@ -97,46 +125,106 @@ function WinCelebrationComponent({ status, animationsEnabled, onReset }: WinCele
 
           {/* Celebration card */}
           <motion.div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby={titleId}
+            aria-describedby={descriptionId}
             initial={animationsEnabled ? { scale: 0.8, y: 20 } : {}}
             animate={{ scale: 1, y: 0 }}
             exit={animationsEnabled ? { scale: 0.8, y: 20 } : {}}
             transition={{ type: 'spring', damping: 15 }}
             className={cn(
-              'relative flex flex-col items-center gap-6 p-8 rounded-2xl',
-              'bg-card border border-border shadow-2xl',
-              'max-w-[90vw] w-[320px]'
+              'relative w-full max-w-sm overflow-hidden rounded-3xl border border-border/80',
+              'bg-card/95 shadow-2xl backdrop-blur-xl'
             )}
+            onClick={(event) => event.stopPropagation()}
           >
-            {isWin && (
-              <motion.div
-                animate={animationsEnabled ? { rotate: [0, -10, 10, -10, 0] } : {}}
-                transition={{ duration: 0.5, delay: 0.3 }}
-              >
-                <Trophy className="w-16 h-16 text-amber-500" />
-              </motion.div>
-            )}
+            <div
+              className={cn(
+                'pointer-events-none absolute inset-x-0 top-0 h-28 bg-gradient-to-b',
+                accentClass
+              )}
+              aria-hidden="true"
+            />
 
-            <div className="text-center">
+            <button
+              type="button"
+              onClick={onReset}
+              className={cn(
+                'absolute top-4 right-4 z-10 rounded-full border border-border/60 bg-background/80 p-1.5',
+                'transition-colors hover:bg-muted'
+              )}
+              aria-label="Close celebration"
+            >
+              <X className="h-5 w-5 text-muted-foreground" />
+            </button>
+
+            <div className="relative z-0 flex flex-col gap-5 p-6 pt-8">
+              <div className="space-y-3">
+                <div className="flex items-center justify-between text-xs font-medium uppercase tracking-[0.2em] text-muted-foreground">
+                  <span>Game Over</span>
+                  <span>{badgeLabel}</span>
+                </div>
+
+                <div className="h-2 overflow-hidden rounded-full bg-muted/80">
+                  <motion.div
+                    className={cn(
+                      'h-full rounded-full',
+                      isDraw ? 'bg-muted-foreground/70' : 'bg-primary'
+                    )}
+                    initial={animationsEnabled ? { width: 0 } : false}
+                    animate={{ width: '100%' }}
+                    transition={{ duration: 0.35, ease: 'easeOut' }}
+                  />
+                </div>
+              </div>
+
+              <motion.div
+                animate={animationsEnabled && isWin ? { rotate: [0, -10, 10, -10, 0] } : {}}
+                transition={{ duration: 0.5, delay: 0.3 }}
+                className="mx-auto flex h-18 w-18 items-center justify-center rounded-2xl border border-border/60 bg-background/85 shadow-sm"
+              >
+                {isWin ? (
+                  <Trophy className="h-9 w-9 text-amber-500" />
+                ) : (
+                  <Crown className="h-9 w-9 text-muted-foreground" />
+                )}
+              </motion.div>
+
               <motion.h2
-                className="text-2xl font-bold text-foreground"
-                animate={
-                  animationsEnabled
-                    ? { scale: [1, 1.05, 1] }
-                    : {}
-                }
+                id={titleId}
+                className="text-center text-2xl font-bold tracking-tight text-foreground"
+                animate={animationsEnabled ? { scale: [1, 1.04, 1] } : {}}
                 transition={{ duration: 0.5, delay: 0.4 }}
               >
-                {getWinnerText()}
+                {getStatusText()}
               </motion.h2>
-              <p className="mt-2 text-muted-foreground">
-                {isWin ? 'Congratulations!' : '50 moves without a capture'}
-              </p>
-            </div>
 
-            <Button onClick={onReset} className="gap-2 w-full">
-              <RotateCcw className="w-4 h-4" />
-              Play Again
-            </Button>
+              <p
+                id={descriptionId}
+                className="mx-auto max-w-[28ch] text-center text-sm leading-6 text-muted-foreground"
+              >
+                {getSupportingText()}
+              </p>
+
+              <div className="grid gap-2 sm:grid-cols-2">
+                <Button
+                  variant="outline"
+                  onClick={onReset}
+                  className="w-full gap-2"
+                >
+                  <RotateCcw className="h-4 w-4" />
+                  New Game
+                </Button>
+                <Button
+                  onClick={onReset}
+                  className="w-full gap-2 shadow-sm"
+                >
+                  <RotateCcw className="h-4 w-4" />
+                  Play Again
+                </Button>
+              </div>
+            </div>
           </motion.div>
         </motion.div>
       )}

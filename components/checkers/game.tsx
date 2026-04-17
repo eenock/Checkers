@@ -1,7 +1,6 @@
 'use client'
 
 import { useReducer, useCallback, useEffect, useSyncExternalStore } from 'react'
-import { motion } from 'framer-motion'
 import { Board } from './board'
 import { GameControls } from './game-controls'
 import { MoveHistory } from './move-history'
@@ -172,16 +171,12 @@ function CheckersGameContent({
         'bg-background'
       )}
     >
-      <motion.header
-        initial={state.animationsEnabled ? { y: -20, opacity: 0 } : {}}
-        animate={{ y: 0, opacity: 1 }}
-        className="text-center"
-      >
+      <header className="text-center">
         <h1 className="text-3xl md:text-4xl font-bold text-foreground tracking-tight">
           Checkers
         </h1>
         <p className="text-muted-foreground text-sm mt-1">Classic board game</p>
-      </motion.header>
+      </header>
 
       <main className="flex flex-col lg:flex-row items-center lg:items-start gap-6">
         <div className="flex flex-col items-center gap-4">
