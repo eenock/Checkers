@@ -14,6 +14,8 @@ interface SquareProps {
   isValidMove: boolean
   isJumpTarget: boolean
   canSelectPiece: boolean
+  isLastMoveFrom: boolean
+  isLastMoveTo: boolean
   animationsEnabled: boolean
   onSelect: () => void
   onMove: (move: Move) => void
@@ -28,6 +30,8 @@ function SquareComponent({
   isValidMove,
   isJumpTarget,
   canSelectPiece,
+  isLastMoveFrom,
+  isLastMoveTo,
   animationsEnabled,
   onSelect,
   onMove,
@@ -75,6 +79,17 @@ function SquareComponent({
           : 'linear-gradient(135deg, rgba(255,255,255,0.1) 0%, transparent 100%)',
       }}
     >
+      {(isLastMoveFrom || isLastMoveTo) && (
+        <motion.div
+          initial={animationsEnabled ? { opacity: 0 } : false}
+          animate={{ opacity: 1 }}
+          className={cn(
+            'pointer-events-none absolute inset-0 border-2',
+            isLastMoveTo ? 'border-primary/70 bg-primary/10' : 'border-amber-500/60 bg-amber-500/10'
+          )}
+        />
+      )}
+
       {/* Valid move indicator */}
       <AnimatePresence>
         {isValidMove && !cell && (

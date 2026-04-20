@@ -1,6 +1,6 @@
 'use client'
 
-import { memo, useEffect, useId, useState, useSyncExternalStore } from 'react'
+import { memo, useCallback, useEffect, useId, useState, useSyncExternalStore } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { X, ChevronRight, ChevronLeft, Crown, Zap, Target } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -8,6 +8,8 @@ import { cn } from '@/lib/utils'
 
 interface TutorialProps {
   animationsEnabled: boolean
+  isForcedOpen?: boolean
+  onForcedClose?: () => void
 }
 
 const TUTORIAL_KEY = 'checkers_tutorial_seen'
@@ -43,7 +45,11 @@ const tutorialSteps = [
   },
 ]
 
-function TutorialComponent({ animationsEnabled }: TutorialProps) {
+function TutorialComponent({
+  animationsEnabled,
+  isForcedOpen = false,
+  onForcedClose,
+}: TutorialProps) {
   const [dismissed, setDismissed] = useState(false)
   const [step, setStep] = useState(0)
   const titleId = useId()
@@ -54,13 +60,14 @@ function TutorialComponent({ animationsEnabled }: TutorialProps) {
     () => false
   )
   const shouldShowTutorial = hydrated && !localStorage.getItem(TUTORIAL_KEY)
-  const isOpen = shouldShowTutorial && !dismissed
+  const isOpen = isForcedOpen || (shouldShowTutorial && !dismissed)
 
-  const handleClose = () => {
+  const handleClose = useCallback(() => {
     localStorage.setItem(TUTORIAL_KEY, 'true')
     setDismissed(true)
     setStep(0)
-  }
+    onForcedClose?.()
+  }, [onForcedClose])
 
   useEffect(() => {
     if (!isOpen) {
@@ -75,7 +82,7 @@ function TutorialComponent({ animationsEnabled }: TutorialProps) {
 
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [isOpen])
+  }, [handleClose, isOpen])
 
   const handleNext = () => {
     if (step < tutorialSteps.length - 1) {

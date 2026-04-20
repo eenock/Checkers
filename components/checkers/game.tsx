@@ -1,6 +1,6 @@
 'use client'
 
-import { useReducer, useCallback, useEffect, useSyncExternalStore } from 'react'
+import { useReducer, useCallback, useEffect, useState, useSyncExternalStore } from 'react'
 import { Board } from './board'
 import { GameControls } from './game-controls'
 import { MoveHistory } from './move-history'
@@ -98,6 +98,8 @@ function CheckersGameContent({
     initialSavedGame,
     createStateFromSavedGame
   )
+  const [isTutorialOpen, setIsTutorialOpen] = useState(false)
+  const lastMove = state.moveHistory.at(-1) ?? null
 
   // Save state to localStorage after hydration has completed.
   useEffect(() => {
@@ -154,6 +156,10 @@ function CheckersGameContent({
     dispatch({ type: 'TOGGLE_ANIMATIONS' })
   }, [])
 
+  const handleShowTutorial = useCallback(() => {
+    setIsTutorialOpen(true)
+  }, [])
+
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
@@ -186,7 +192,10 @@ function CheckersGameContent({
             canUndo={state.canUndo}
             animationsEnabled={state.animationsEnabled}
             mustJump={state.mustJump}
+            selectedPiece={state.selectedPiece}
+            validMoves={state.validMoves}
             onReset={handleReset}
+            onShowTutorial={handleShowTutorial}
             onUndo={handleUndo}
             onSurrender={handleSurrender}
             onToggleAnimations={handleToggleAnimations}
@@ -198,6 +207,7 @@ function CheckersGameContent({
             selectedPiece={state.selectedPiece}
             validMoves={state.validMoves}
             jumpingPiece={state.jumpingPiece}
+            lastMove={lastMove}
             animationsEnabled={state.animationsEnabled}
             isPlaying={state.status === 'playing'}
             onSelectPiece={handleSelectPiece}
@@ -217,7 +227,11 @@ function CheckersGameContent({
         onReset={handleReset}
       />
 
-      <Tutorial animationsEnabled={state.animationsEnabled} />
+      <Tutorial
+        animationsEnabled={state.animationsEnabled}
+        isForcedOpen={isTutorialOpen}
+        onForcedClose={() => setIsTutorialOpen(false)}
+      />
     </div>
   )
 }

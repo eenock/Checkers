@@ -92,6 +92,7 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
         to: move.to,
         captured: move.captured?.length || 0,
         promoted: willPromote,
+        isJump: move.isJump,
       }
 
       // Update moves without capture counter

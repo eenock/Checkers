@@ -29,6 +29,7 @@ export interface MoveRecord {
   to: Position
   captured: number
   promoted: boolean
+  isJump: boolean
 }
 
 export type GameStatus = 'playing' | 'player1_wins' | 'player2_wins' | 'draw'

@@ -2,7 +2,7 @@
 
 import { memo, useCallback } from 'react'
 import { motion } from 'framer-motion'
-import type { Board as BoardType, Move, Player, Position } from '@/lib/checkers/types'
+import type { Board as BoardType, Move, MoveRecord, Player, Position } from '@/lib/checkers/types'
 import { Square } from './square'
 import { cn } from '@/lib/utils'
 
@@ -12,6 +12,7 @@ interface BoardProps {
   selectedPiece: Position | null
   validMoves: Move[]
   jumpingPiece: Position | null
+  lastMove: MoveRecord | null
   animationsEnabled: boolean
   isPlaying: boolean
   onSelectPiece: (position: Position) => void
@@ -24,6 +25,7 @@ function BoardComponent({
   selectedPiece,
   validMoves,
   jumpingPiece,
+  lastMove,
   animationsEnabled,
   isPlaying,
   onSelectPiece,
@@ -88,6 +90,8 @@ function BoardComponent({
             isValidMove={isValidMoveTarget(rowIndex, colIndex)}
             isJumpTarget={isJumpTarget(rowIndex, colIndex)}
             canSelectPiece={canSelectPiece(rowIndex, colIndex)}
+            isLastMoveFrom={lastMove?.from.row === rowIndex && lastMove?.from.col === colIndex}
+            isLastMoveTo={lastMove?.to.row === rowIndex && lastMove?.to.col === colIndex}
             animationsEnabled={animationsEnabled}
             onSelect={() => onSelectPiece({ row: rowIndex, col: colIndex })}
             onMove={onMovePiece}

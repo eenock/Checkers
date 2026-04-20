@@ -66,6 +66,8 @@ function MoveHistoryComponent({ moves, animationsEnabled }: MoveHistoryProps) {
 }
 
 function MoveList({ moves }: { moves: MoveRecord[] }) {
+  const latestMoveIndex = moves.length - 1
+
   return (
     <div
       className={cn(
@@ -80,7 +82,10 @@ function MoveList({ moves }: { moves: MoveRecord[] }) {
         {moves.map((move, index) => (
           <li
             key={index}
-            className="flex items-center gap-2 py-1 px-2 rounded hover:bg-muted/50"
+            className={cn(
+              'flex items-center gap-2 rounded px-2 py-1 transition-colors',
+              index === latestMoveIndex ? 'bg-primary/8 ring-1 ring-primary/20' : 'hover:bg-muted/50'
+            )}
           >
             <span className="text-muted-foreground w-6 text-right">{index + 1}.</span>
             <div
@@ -93,6 +98,11 @@ function MoveList({ moves }: { moves: MoveRecord[] }) {
             <span>
               {formatPosition(move.from)} → {formatPosition(move.to)}
             </span>
+            {move.isJump && (
+              <span className="rounded-full bg-primary/10 px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide text-primary">
+                Jump
+              </span>
+            )}
             {move.captured > 0 && (
               <span className="text-destructive text-xs">×{move.captured}</span>
             )}

@@ -2,9 +2,10 @@
 
 import { memo } from 'react'
 import { motion } from 'framer-motion'
-import { RotateCcw, Flag, Undo2, Sparkles } from 'lucide-react'
+import { RotateCcw, Flag, Undo2, Sparkles, BookOpen } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import type { Player, GameStatus } from '@/lib/checkers/types'
+import { formatPosition } from '@/lib/checkers/game-logic'
+import type { Player, GameStatus, Move, Position } from '@/lib/checkers/types'
 import { cn } from '@/lib/utils'
 
 interface GameControlsProps {
@@ -13,10 +14,13 @@ interface GameControlsProps {
   canUndo: boolean
   animationsEnabled: boolean
   mustJump: boolean
+  selectedPiece: Position | null
+  validMoves: Move[]
   onReset: () => void
   onUndo: () => void
   onSurrender: () => void
   onToggleAnimations: () => void
+  onShowTutorial: () => void
 }
 
 function GameControlsComponent({
@@ -25,10 +29,13 @@ function GameControlsComponent({
   canUndo,
   animationsEnabled,
   mustJump,
+  selectedPiece,
+  validMoves,
   onReset,
   onUndo,
   onSurrender,
   onToggleAnimations,
+  onShowTutorial,
 }: GameControlsProps) {
   const isPlaying = status === 'playing'
 
@@ -45,6 +52,23 @@ function GameControlsComponent({
           ? `${currentPlayer === 1 ? 'Light' : 'Dark'}'s Turn - Must Jump!`
           : `${currentPlayer === 1 ? 'Light' : 'Dark'}'s Turn`
     }
+  }
+
+  const getHelperText = () => {
+    if (!isPlaying) {
+      return 'Start a new game to keep playing.'
+    }
+
+    if (selectedPiece && validMoves.length > 0) {
+      const moveLabel = validMoves.length === 1 ? 'move' : 'moves'
+      return `${formatPosition(selectedPiece)} selected · ${validMoves.length} legal ${moveLabel}`
+    }
+
+    if (mustJump) {
+      return 'A capture is available. Select one of your pieces that can jump.'
+    }
+
+    return 'Select a piece to preview its legal moves.'
   }
 
   return (
@@ -74,6 +98,10 @@ function GameControlsComponent({
         </span>
       </motion.div>
 
+      <p className="max-w-[36ch] text-center text-xs leading-5 text-muted-foreground md:text-sm">
+        {getHelperText()}
+      </p>
+
       {/* Control buttons */}
       <div className="flex flex-wrap items-center justify-center gap-2">
         <Button
@@ -85,6 +113,17 @@ function GameControlsComponent({
         >
           <RotateCcw className="w-4 h-4" />
           <span className="hidden sm:inline">Reset</span>
+        </Button>
+
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={onShowTutorial}
+          className="gap-2"
+          aria-label="Open tutorial"
+        >
+          <BookOpen className="w-4 h-4" />
+          <span className="hidden sm:inline">Tutorial</span>
         </Button>
 
         <Button
