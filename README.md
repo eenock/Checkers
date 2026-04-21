@@ -1,5 +1,7 @@
 # Checkers
 
+[![CI](https://github.com/eenock/Checkers/actions/workflows/ci.yml/badge.svg)](https://github.com/eenock/Checkers/actions/workflows/ci.yml)
+
 A modern, responsive checkers game built with Next.js, React, TypeScript, and Tailwind CSS.
 
 It recreates the classic two-player board game with smooth interactions, forced captures, king promotion, move history, local save support, and a clean interface that works well on both desktop and mobile.

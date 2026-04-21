@@ -143,7 +143,7 @@ function getJumps(
           jumps.push({
             from: position,
             to: chainJump.to,
-            captured: newCaptured.concat(chainJump.captured || []),
+            captured: chainJump.captured || newCaptured,
             isJump: true,
           })
         }
